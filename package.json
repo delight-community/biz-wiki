@@ -1,0 +1,24 @@
+{
+  "name": "business-aggregate-data",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bwettenstein/business-aggregate-data.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bwettenstein/business-aggregate-data/issues"
+  },
+  "homepage": "https://github.com/bwettenstein/business-aggregate-data#readme"
+}
