@@ -68,7 +68,7 @@ const fetchFromYelp = async (businessData) => {
     .catch((err) => console.error(err));
 
   // Searches by id to get even MORE info
-  const businessId = yelpData.businesses[0].id;
+  const businessId = yelpData?.businesses?.[0]?.id;
   try {
     yelpData = await fetch(`${YELP_ID_ENDPOINT}${businessId}`, {
       method: 'get',
@@ -79,10 +79,17 @@ const fetchFromYelp = async (businessData) => {
       .then((res) => res.json())
       .catch((err) => console.error(err));
 
-    if (yelpData) {
+    if (yelpData && !yelpData.error) {
       console.log(`Found yelp details for ${businessData.name}`);
-      return yelpData;
+
+      return {
+        ...yelpData,
+        ...businessData
+      };
     }
+
+    console.log(`Found to find yelp details for ${businessData.name}: ${yelpData?.error?.description} (${yelpData?.error?.code})`);
+    return businessData;
   } catch (err) {
     console.error(
       err,
@@ -104,16 +111,18 @@ const fetchFromGoogle = async (businessData) => {
     .catch((err) => console.error(err));
 
   try {
-    const placeId = googleData.candidates[0].place_id;
+    const placeId = googleData?.candidates?.[0]?.place_id;
     console.log(`Found google place id for ${businessData.name}: ${placeId}`);
 
     // Searches by id to get even MORE info
-    googleData = await fetch(
-      `${GOOGLE_PLACES_DETAILS_ENDOINT}&key=${GOOGLE_API}&place_id=${placeId}`,
-      { method: 'get' }
-    )
-      .then((res) => res.json())
-      .catch((err) => console.error(err));
+    if(placeId) {
+      googleData = await fetch(
+        `${GOOGLE_PLACES_DETAILS_ENDOINT}&key=${GOOGLE_API}&place_id=${placeId}`,
+        { method: 'get' }
+      )
+        .then((res) => res.json())
+        .catch((err) => console.error(err));
+    }
   } catch (err) {
     console.error(
       err,
@@ -122,7 +131,10 @@ const fetchFromGoogle = async (businessData) => {
   }
   console.log(`Found google place details for ${businessData.name}`);
 
-  return googleData;
+  return {
+    ...(googleData.result),
+    ...businessData
+  };
 };
 
 module.exports = {
