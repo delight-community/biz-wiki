@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
+const {project} = require('./helpers');
 dotenv.config();
 
 // Replace these with your actual API codes
@@ -23,7 +24,7 @@ const GOOGLE_PLACES_DETAILS_ENDOINT =
 
 // Need to add search value and search parameter, as function parameters
 // Then write a filter statement based off it
-const fetchFromChicagoBiz = async (searchField, searchValue) => {
+const fetchFromChicagoBiz = async (searchField, searchValue, desiredFields = undefined) => {
   console.log('Searching Chicago Business for data....');
 
   // Right now I'm requiring a searchField and searchValue, but that can change
@@ -32,7 +33,7 @@ const fetchFromChicagoBiz = async (searchField, searchValue) => {
     return;
   }
 
-  const chicagoDump = await fetch(
+  let chicagoDump = await fetch(
     `${CHICAGO_BIZ_ENDPOINT}?${searchField}=${searchValue}`,
     {
       method: 'get',
@@ -44,11 +45,15 @@ const fetchFromChicagoBiz = async (searchField, searchValue) => {
   console.log(
     `Found Chicago Business details for ${searchField} : ${searchValue}`
   );
+
+  if(desiredFields) {
+    chicagoDump = chicagoDump.map(singleBiz => project(singleBiz, desiredFields));
+  }
   if (chicagoDump) return chicagoDump;
 };
 
 // businessData - Right now the method runs on the assumption that businessData contains a name and an address
-const fetchFromYelp = async (businessData) => {
+const fetchFromYelp = async (businessData, desiredFields = undefined) => {
   console.log('Searching Yelp for data ....');
   if (!businessData) {
     console.error('Missing searchField and/or searchValue');
@@ -81,9 +86,11 @@ const fetchFromYelp = async (businessData) => {
 
     if (yelpData && !yelpData.error) {
       console.log(`Found yelp details for ${businessData.name}`);
-
+      if(desiredFields) {
+        yelpData = project(yelpData, desiredFields);
+      }
       return {
-        ...yelpData,
+        yelp: yelpData,
         ...businessData
       };
     }
@@ -99,7 +106,7 @@ const fetchFromYelp = async (businessData) => {
 };
 
 // businessData - Right now the method runs on the assumption that businessData contains a name and an address
-const fetchFromGoogle = async (businessData) => {
+const fetchFromGoogle = async (businessData, desiredFields = undefined) => {
   console.log('Searching google for place data....');
   let googleData = await fetch(
     `${GOOGLE_PLACES_SEARCH_ENDPOINT}&key=${GOOGLE_API}&input=${businessData.name} ${businessData.address}`,
@@ -128,11 +135,14 @@ const fetchFromGoogle = async (businessData) => {
       err,
       `Could not find google place details for ${businessData.name}`
     );
+    return businessData;
   }
   console.log(`Found google place details for ${businessData.name}`);
-
+  if(googleData?.result && desiredFields) {
+    googleData.result = project(googleData.result, desiredFields);
+  }
   return {
-    ...(googleData.result),
+    google: (googleData.result),
     ...businessData
   };
 };
